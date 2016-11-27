@@ -4,6 +4,27 @@ A WIP attempt to write a DSL for DynamoDB expressions in Clojure
 
 http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Modifying.html
 
+* Examples
+
+#+BEGIN_SRC clojure
+  (ns foo
+    (:require [dynamodb-expressions :as dx]))
+
+  (def x 4)
+  (dx/expr
+   '(dx/add ["foo.bar" x] ["bar.baz" 8])
+   '(dx/add ["#-goof-" 76]))
+
+
+  #_({:update-expression "ADD #foo_bar_G__22528 :x_G__22529, #bar_baz_G__22530 :8_G__22531",
+      :expression-attribute-names {"#foo_bar_G__22528" "foo.bar",
+                                   "#bar_baz_G__22530" "bar.baz",
+                                   "#__goof__G__22532" "#-goof-"},
+      :expression-attribute-values {":x_G__22529" 4,
+                                    ":8_G__22531" 8,
+                                    ":76_G__22533" 76}})
+
+#+END_SRC
 
 * License
 
