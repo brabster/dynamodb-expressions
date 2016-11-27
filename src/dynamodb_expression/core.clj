@@ -28,9 +28,11 @@
                    {:type :add}
                    parts)))
 
-(defmulti render-update-expression first)
+(defmulti render-update-expression (fn [args] (first args)))
 
-(defmethod render-update-expression :add [_ pairs]
+(defmethod render-update-expression :default [[t _]] (throw (ex-info "Can't handle type" {:type t})))
+
+(defmethod render-update-expression :add [[_ pairs]]
   (->> pairs
        (map #(clojure.string/join " " %))
        (clojure.string/join ", ")))
@@ -38,16 +40,16 @@
 (defn type-kwd->type-expr [kwd] (-> kwd name clojure.string/upper-case))
 
 (defn reduce-partial-exprs [partial-type partials]
-  (-> (reduce (fn [{:keys [update-expression expression-attribute-names expression-attribute-values]
-                    :as acc}
-                   {:keys [type expression attr-names attr-values]}]
-                (prn update-expression)
-                {:update-expression (vec (conj update-expression (render-add-expr partial-type expression)))
-                 :expression-attribute-names (merge expression-attribute-names attr-names)
-                 :expression-attribute-values (merge expression-attribute-values attr-values)})
-              {}
-              partials)
-      (update :update-expression #(str (type-kwd->type-expr partial-type) " " (first %)))))
+  (->
+   (reduce (fn [{:keys [update-expression expression-attribute-names expression-attribute-values]
+                 :as acc}
+                {:keys [type expression attr-names attr-values]}]
+             {:update-expression (vec (conj update-expression (render-update-expression [partial-type expression])))
+              :expression-attribute-names (merge expression-attribute-names attr-names)
+              :expression-attribute-values (merge expression-attribute-values attr-values)})
+           {}
+           partials)
+   (update :update-expression #(str (type-kwd->type-expr partial-type) " " (first %)))))
 
 (defn expr [& forms]
   (->>
