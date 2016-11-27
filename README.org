@@ -1,0 +1,13 @@
+# dynamodb-expression
+
+A WIP attempt to write a DSL for DynamoDB expressions in Clojure
+
+http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Modifying.html
+
+
+## License
+
+Copyright © 2016 Paul Brabban
+
+Distributed under the Eclipse Public License either version 1.0 or (at
+your option) any later version.
