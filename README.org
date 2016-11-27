@@ -1,10 +1,12 @@
 * dynamodb-expression
 
-A WIP attempt to write a DSL for DynamoDB expressions in Clojure
+A WIP attempt to write a DSL for DynamoDB expressions in Clojure. Not ready for real-world use yet!
 
 http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Modifying.html
 
 * Examples
+
+This much pretty much works...
 
 #+BEGIN_SRC clojure
   (ns foo
@@ -12,18 +14,30 @@ http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Modi
 
   (def x 4)
   (dx/expr
-   '(dx/add ["foo.bar" x] ["bar.baz" 8])
-   '(dx/add ["#-goof-" 76]))
+   '(dx/add ["foo.bar" x]
+            ["bar.baz" 8])
+   '(dx/add ["-goof-" 76]))
 
 
   #_({:update-expression "ADD #foo_bar_G__22528 :x_G__22529, #bar_baz_G__22530 :8_G__22531",
       :expression-attribute-names {"#foo_bar_G__22528" "foo.bar",
                                    "#bar_baz_G__22530" "bar.baz",
-                                   "#__goof__G__22532" "#-goof-"},
+                                   "#__goof__G__22532" "-goof-"},
       :expression-attribute-values {":x_G__22529" 4,
                                     ":8_G__22531" 8,
                                     ":76_G__22533" 76}})
+#+END_SRC
 
+Next steps to extend the syntax out to set, remove, delete, and tidy up the syntax, something like:
+
+#+BEGIN_SRC clojure
+(dx/expr
+  (dx/add ["a" x]
+          ["b" 8])
+  (dx/set (dx/+ "c" 76)
+          (dx/= "d" "foo bar))
+  (dx/remove "e" "f" "g")
+  (dx/delete ["h" "baz]))
 #+END_SRC
 
 * License
