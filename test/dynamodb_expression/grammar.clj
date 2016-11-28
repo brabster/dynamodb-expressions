@@ -51,6 +51,9 @@
     (is (vector? (parse "REMOVE MyNumbers[1], MyNumbers[3]"))))
 
   (testing "Badly-formed examples don't parse"
-    (is (map? (parse "foo")))
-    (is (map? (parse "SET list[0] = :val1, REMOVE #m.nestedField1, #m.nestedField2")))
-    (is (map? (parse "SET list[0] = :val1 REMOVE #m.nestedField1 #m.nestedField2")))))
+    (testing "random word"
+      (is (map? (parse "foo"))))
+    (testing "extra comma between types of operation"
+      (is (map? (parse "SET list[0] = :val1, REMOVE #m.nestedField1, #m.nestedField2"))))
+    (testing "missing comma between two of same type of operation"
+      (is (map? (parse "SET list[0] = :val1 REMOVE #m.nestedField1 #m.nestedField2"))))))
