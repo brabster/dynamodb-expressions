@@ -7,7 +7,7 @@ http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Modi
 * dynamodb Grammar
 
 To test condition expressions without nasty string hacking, there's a
-grammar for condition expressions, based on the documentation, in the tests.
+grammar for condition expressions, based on the documentation.
 
 * Examples
 
