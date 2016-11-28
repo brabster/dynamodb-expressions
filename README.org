@@ -35,7 +35,7 @@ Next steps to extend the syntax out to set, remove, delete, and tidy up the synt
   (dx/add ["a" x]
           ["b" 8])
   (dx/set (dx/+ "c" 76)
-          (dx/= "d" "foo bar))
+          (dx/= "d" "foo bar"))
   (dx/remove "e" "f" "g")
   (dx/delete ["h" "baz"]))
 #+END_SRC
