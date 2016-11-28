@@ -5,4 +5,4 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]]
   :target-path "target/%s"
-  :profiles {})
+  :profiles {:dev {:dependencies [[instaparse "1.4.3"]]}})
