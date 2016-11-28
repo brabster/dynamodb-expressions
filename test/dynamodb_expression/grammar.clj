@@ -51,4 +51,6 @@
     (is (vector? (parse "REMOVE MyNumbers[1], MyNumbers[3]"))))
 
   (testing "Badly-formed examples don't parse"
-    (is (map? (parse "foo")))))
+    (is (map? (parse "foo")))
+    (is (map? (parse "SET list[0] = :val1, REMOVE #m.nestedField1, #m.nestedField2")))
+    (is (map? (parse "SET list[0] = :val1 REMOVE #m.nestedField1 #m.nestedField2")))))
