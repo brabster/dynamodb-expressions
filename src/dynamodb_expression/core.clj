@@ -28,9 +28,16 @@
   (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
     (include-op expr :add op (str expr-name " " expr-val))))
 
-(defn set [expr field val]
-  (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
-    (include-op expr :set op (str expr-name " = " expr-val))))
+(defn set
+  ([expr field val]
+   (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
+     (include-op expr :set op (str expr-name " = " expr-val))))
+  ([expr field operator val]
+   (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
+     (include-op expr :set op (str expr-name " = " expr-val))))
+  ([expr field other-field operator val]
+   (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
+     (include-op expr :set op (str expr-name " = " expr-val)))))
 
 (defn delete [expr field val]
   (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
@@ -54,6 +61,7 @@
 (defn- attr-map [name-or-value key ops]
   (->> ops
        (map (juxt name-or-value key))
+       ;; (remove #(some nil? %))
        (into {})))
 
 (defn expr [{:keys [ops] :as expr}]

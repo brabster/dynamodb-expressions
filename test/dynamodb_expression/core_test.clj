@@ -29,7 +29,7 @@
       (is (= update-expression "ADD #nfoo_bar_G__1 :vfoo_bar_G__1, #nbar_baz_G__2 :vbar_baz_G__2, #n_goof__G__3 :v_goof__G__3"))
       (is (vector? parsed-exp)))))
 
-(deftest set-test
+(deftest set-and-add-test
   (testing "Another basic integration test"
     (let [x 4
           {:keys [update-expression expression-attribute-names expression-attribute-values]
@@ -44,6 +44,22 @@
                                           ":vsomething_else_G__2" 32}))
       (is (vector? (g/parse "ADD #nsomething_else_G__2 :vsomething_else_G__2 SET #nsomething_G__1 = :vsomething_G__1")))
       (is (= update-expression "ADD #nsomething_else_G__2 :vsomething_else_G__2 SET #nsomething_G__1 = :vsomething_G__1"))
+      (is (vector? parsed-exp)))))
+
+(deftest set-test
+  (testing "Another basic integration test"
+    (let [x 4
+          {:keys [update-expression expression-attribute-names expression-attribute-values]
+           :as ex} (-> (dx/update-expr)
+                       (dx/set :something :something-else + 4)
+                       dx/expr)
+          parsed-exp (g/parse update-expression)]
+      (is (= expression-attribute-names {"#nsomething_G__1" "something"
+                                         "#nsomething_else_G__2" "something-else"}))
+      (is (= expression-attribute-values {":vsomething_G__1" 4}))
+      (let [expected-exp "SET #nsomething_G__1 = #nsomething_else_G__2 + :vsomething_G__1"]
+        (is (vector? (g/parse expected-exp)))
+        (is (= update-expression expected-exp)))
       (is (vector? parsed-exp)))))
 
 (deftest delete-test
