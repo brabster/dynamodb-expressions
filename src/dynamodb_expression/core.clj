@@ -1,6 +1,9 @@
 (ns dynamodb-expression.core
   (:require [clojure.string :as st]))
 
+(defn sanitize-placeholder [ph]
+  (st/replace ph #"[^0-9a-zA-Z_]" "_"))
+
 (defn update-expr []
   {:ops []})
 
