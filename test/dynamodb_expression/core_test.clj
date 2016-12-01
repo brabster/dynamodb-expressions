@@ -51,13 +51,16 @@
     (let [x 4
           {:keys [update-expression expression-attribute-names expression-attribute-values]
            :as ex} (-> (dx/update-expr)
-                       (dx/set :something :something-else + 4)
+                       (dx/set :fish '+ 33)
+                       (dx/set :something :something-else '+ 4)
                        dx/expr)
           parsed-exp (g/parse update-expression)]
-      (is (= expression-attribute-names {"#nsomething_G__1" "something"
-                                         "#nsomething_else_G__2" "something-else"}))
-      (is (= expression-attribute-values {":vsomething_G__1" 4}))
-      (let [expected-exp "SET #nsomething_G__1 = #nsomething_else_G__2 + :vsomething_G__1"]
+      (is (= expression-attribute-names {"#nfish_G__1" "fish"
+                                         "#nsomething_G__2" "something"
+                                         "#nsomething_else_G__3" "something-else"}))
+      (is (= expression-attribute-values {":vsomething_G__2" 4
+                                          ":vfish_G__1" 33}))
+      (let [expected-exp "SET #nfish_G__1 = #nfish_G__1 + :vfish_G__1, #nsomething_G__1 = #nsomething_else_G__2 + :vsomething_G__1"]
         (is (vector? (g/parse expected-exp)))
         (is (= update-expression expected-exp)))
       (is (vector? parsed-exp)))))

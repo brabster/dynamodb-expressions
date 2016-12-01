@@ -34,10 +34,16 @@
      (include-op expr :set op (str expr-name " = " expr-val))))
   ([expr field operator val]
    (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
-     (include-op expr :set op (str expr-name " = " expr-val))))
+     (include-op expr :set op (str expr-name " = " expr-name " " operator " " expr-val))))
   ([expr field other-field operator val]
-   (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
-     (include-op expr :set op (str expr-name " = " expr-val)))))
+   (let [{:keys [expr-name expr-val] :as op} (new-op field val)
+         other-op (new-op other-field nil)]
+     (-> expr
+         (include-op :set op (str expr-name " = " expr-val))
+         (update-in [:ops] conj
+                    (-> other-op
+                        (select-keys [:expr-name :field])
+                        (assoc :op :set)))))))
 
 (defn delete [expr field val]
   (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
@@ -52,6 +58,7 @@
        (group-by :op)
        (into (sorted-map))
        (reduce (fn [ex [op ops]]
+                 (prn '>> ops)
                  (->> ops
                       (map :expr-part)
                       (st/join ", ")
