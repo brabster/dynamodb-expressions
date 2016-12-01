@@ -60,7 +60,7 @@
                                          "#nsomething_else_G__3" "something-else"}))
       (is (= expression-attribute-values {":vsomething_G__2" 4
                                           ":vfish_G__1" 33}))
-      (let [expected-exp "SET #nfish_G__1 = #nfish_G__1 + :vfish_G__1, #nsomething_G__1 = #nsomething_else_G__2 + :vsomething_G__1"]
+      (let [expected-exp "SET #nfish_G__1 = #nfish_G__1 + :vfish_G__1, #nsomething_G__2 = #nsomething_else_G__3 + :vsomething_G__2"]
         (is (vector? (g/parse expected-exp)))
         (is (= update-expression expected-exp)))
       (is (vector? parsed-exp)))))

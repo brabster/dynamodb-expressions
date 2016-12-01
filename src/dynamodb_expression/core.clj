@@ -39,7 +39,7 @@
    (let [{:keys [expr-name expr-val] :as op} (new-op field val)
          other-op (new-op other-field nil)]
      (-> expr
-         (include-op :set op (str expr-name " = " expr-val))
+         (include-op :set op (str expr-name " = " (:expr-name other-op) " " operator " " expr-val))
          (update-in [:ops] conj
                     (-> other-op
                         (select-keys [:expr-name :field])
