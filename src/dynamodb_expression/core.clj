@@ -7,27 +7,48 @@
 (defn update-expr []
   {:ops []})
 
-(defn add [expr field val]
+(defn- new-op [field val]
   (let [field     (name field)
         sym       (sanitize-placeholder (str (gensym (str field "_"))))
-        expr-name (str "#" sym)
-        expr-val  (str ":" sym)]
-    (update-in expr [:ops] conj {:op        :add
-                                 :field     field
-                                 :arg       val
-                                 :sym       sym
-                                 :expr-name expr-name
-                                 :expr-val  expr-val
-                                 :expr-part (str expr-name " " expr-val)})))
+        expr-name (str "#n" sym)
+        expr-val  (str ":v" sym)]
+    {:field     field
+     :arg       val
+     :sym       sym
+     :expr-name expr-name
+     :expr-val  expr-val}))
+
+(defn- include-op [expr op-keywd op expr-part]
+  (update-in expr [:ops] conj
+             (merge op
+                    {:op        op-keywd
+                     :expr-part expr-part})))
+
+(defn add [expr field val]
+  (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
+    (include-op expr :add op (str expr-name " " expr-val))))
+
+(defn set [expr field val]
+  (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
+    (include-op expr :set op (str expr-name " = " expr-val))))
+
+(defn delete [expr field val]
+  (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
+    (include-op expr :delete op (str expr-name " " expr-val))))
+
+(defn remove [expr field]
+  (let [{:keys [expr-name expr-val] :as op} (new-op field nil)]
+    (include-op expr :remove op expr-name)))
 
 (defn- build-expression [ops]
   (->> ops
        (group-by :op)
+       (into (sorted-map))
        (reduce (fn [ex [op ops]]
                  (->> ops
                       (map :expr-part)
                       (st/join ", ")
-                      (str ex (st/upper-case (name op)) " ")))
+                      (str ex (when ex " ") (st/upper-case (name op)) " ")))
                nil)))
 
 (defn- attr-map [name-or-value key ops]
