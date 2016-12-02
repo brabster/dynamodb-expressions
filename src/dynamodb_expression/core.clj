@@ -1,7 +1,7 @@
 (ns dynamodb-expression.core
   (:require [clojure.string :as st]))
 
-(defn sanitize-placeholder [ph]
+(defn- sanitize-placeholder [ph]
   (st/replace ph #"[^0-9a-zA-Z_]" "_"))
 
 (defn update-expr []
@@ -58,9 +58,8 @@
        (group-by :op)
        (into (sorted-map))
        (reduce (fn [ex [op ops]]
-                 (prn '>> ops)
                  (->> ops
-                      (map :expr-part)
+                      (keep :expr-part)
                       (st/join ", ")
                       (str ex (when ex " ") (st/upper-case (name op)) " ")))
                nil)))
@@ -68,7 +67,7 @@
 (defn- attr-map [name-or-value key ops]
   (->> ops
        (map (juxt name-or-value key))
-       ;; (remove #(some nil? %))
+       (clojure.core/remove #(-> % first nil?))
        (into {})))
 
 (defn expr [{:keys [ops] :as expr}]
