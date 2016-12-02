@@ -45,15 +45,18 @@
            :as ex} (-> (dx/update-expr {:id "12"})
                        (dx/set :something x)
                        (dx/add :something-else (* x 8))
+                       (dx/add :fish 12)
                        dx/expr)
           parsed-exp (g/parse update-expression)]
       (is (= {"#nsomething_G__1" "something"
-              "#nsomething_else_G__2" "something-else"}
+              "#nsomething_else_G__2" "something-else"
+              "#nfish_G__3" "fish"}
              expression-attribute-names))
       (is (= {":vsomething_G__1" 4
-              ":vsomething_else_G__2" 32}
+              ":vsomething_else_G__2" 32
+              ":vfish_G__3" 12}
              expression-attribute-values))
-      (is-expr= update-expression "ADD #nsomething_else_G__2 :vsomething_else_G__2 SET #nsomething_G__1 = :vsomething_G__1"))))
+      (is-expr= update-expression "SET #nsomething_G__1 = :vsomething_G__1 ADD #nsomething_else_G__2 :vsomething_else_G__2, #nfish_G__3 :vfish_G__3"))))
 
 (deftest set-test
   (testing "Another basic integration test"

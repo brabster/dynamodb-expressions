@@ -64,9 +64,8 @@
 
 (defn- build-expression [ops]
   (->> ops
-       (group-by :op)
-       (into (sorted-map))
-       (reduce (fn [ex [op ops]]
+       (partition-by :op)
+       (reduce (fn [ex [{:keys [op]} :as ops]]
                  (->> ops
                       (keep :expr-part)
                       (st/join ", ")
