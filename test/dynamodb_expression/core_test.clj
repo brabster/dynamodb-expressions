@@ -11,9 +11,9 @@
         (f)))))
 
 (defn is-expr= [expected-expr generated-expr]
-  (is (vector? (g/parse expected-expr)) "Expected expression not valid")
-  (is (vector? (g/parse generated-expr)) "Generated expression not valid")
-  (is (= expected-expr generated-expr) "Unexpected expression"))
+  (is (vector? (g/parse expected-expr)) (str "Expected expression not valid : " expected-expr))
+  (is (vector? (g/parse generated-expr)) (str "Generated expression not valid : " generated-expr))
+  (is (= expected-expr generated-expr) (str "Unexpected expression" generated-expr)))
 
 (deftest a-test
   (testing "A basic integration test"
