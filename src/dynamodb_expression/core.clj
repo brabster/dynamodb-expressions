@@ -9,14 +9,20 @@
   {:ops []
    :key key})
 
+(defn field->str [f]
+  (cond (or (keyword? f) (symbol? f) (string? f)) (name f)
+        (number? f)                              (str f)
+        :default                                 (str f)))
+
 (defn- new-op [field val]
-  (let [field     (name field)
-        sym       (sanitize-placeholder (str (gensym (str field "_"))))
-        expr-name (str "#n" sym)
-        expr-val  (str ":v" sym)]
+  (let [field (if (sequential? field)
+                (st/join "_" (map field->str field))
+                (field->str field))
+        sym          (sanitize-placeholder (str (gensym (str field "_"))))
+        expr-name    (str "#n" sym)
+        expr-val     (str ":v" sym)]
     {:field     field
-     :arg       val
-     :sym       sym
+     :val       val
      :expr-name expr-name
      :expr-val  expr-val}))
 
@@ -81,5 +87,5 @@
 (defn expr [{:keys [key ops] :as expr}]
   {:update-expression (build-expression ops)
    :expression-attribute-names (attr-map :expr-name :field ops)
-   :expression-attribute-values (attr-map :expr-val :arg ops)
+   :expression-attribute-values (attr-map :expr-val :val ops)
    :key key})

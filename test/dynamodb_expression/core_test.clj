@@ -101,12 +101,21 @@
 (deftest path-test
   (testing "Yet another basic integration test"
     (let [{:keys [update-expression expression-attribute-names expression-attribute-values]
-           :as ex} (-> (dx/update-expr {:id "12"})
-                       (dx/add [:something :else] 12)
-                       (dx/add [:something :new] "else")
-                       (dx/add [:fish 0] 12)
-                       dx/expr)
+           :as   ex} (-> (dx/update-expr {:id "12"})
+                         (dx/add [:something :else] 12)
+                         (dx/add [:something :new] "munge")
+                         (dx/add [:fish 0] 21)
+                         dx/expr)
           parsed-exp (g/parse update-expression)]
-      (is (= {"#nsomething_G__1" "something"} expression-attribute-names))
-      (is (= {":vsomething_G__1" nil} expression-attribute-values))
-      (is-expr= "REMOVE #nsomething_G__1" update-expression))))
+      (testing "names"
+        (is (= {"#nsomething_G__1" "something"
+                "#nelse_G__2"      "else"
+                "#nnew_G__3"       "new"
+                "#nfish_G__4"      "fish"}
+               expression-attribute-names)))
+      (testing "values"
+        (is (= {":vsomething_else_G__1" 12
+                ":vsomething_new_G__2"  "munge"
+                ":vfish_0_G__3"         21} expression-attribute-values)))
+      (testing "expression"
+        (is-expr= "ADD #nsomething_G__1.#nelse_G__2 :velse_G__2, #nsomething_G__1.#nnew_G__3 :vnew_G__3, #nfish_G__4 :vfish_G__4" update-expression)))))
