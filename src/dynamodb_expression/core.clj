@@ -1,5 +1,5 @@
 (ns dynamodb-expression.core
-  (:refer-clojure :rename {remove core-remove})
+  (:refer-clojure :rename {remove core-remove set core-set})
   (:require [clojure.string :as st]))
 
 (defn- sanitize-placeholder [ph]
