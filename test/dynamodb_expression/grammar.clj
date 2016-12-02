@@ -1,4 +1,4 @@
-(ns dynamodb-expression.grammar
+(ns dynamodb-expression.grammar-test
   (:require [instaparse.core :as insta]
             [clojure.test :refer :all]
             [dynamodb-expression.core :as dx]))

@@ -1,59 +1,77 @@
-(ns dynamodb-expression.core)
+(ns dynamodb-expression.core
+  (:require [clojure.string :as st]))
 
-(defn sanitize-placeholder [ph] (clojure.string/replace ph #"[^0-9a-zA-Z_]" "_"))
+(defn sanitize-placeholder [ph]
+  (st/replace ph #"[^0-9a-zA-Z_]" "_"))
 
-(defn gen-placeholder [prefix name]
-  (str prefix (sanitize-placeholder name) "_" (gensym)))
+(defn update-expr []
+  {:ops []})
 
-(defn generate-name-placeholder [name] (gen-placeholder "#" name))
+(defn- new-op [field val]
+  (let [field     (name field)
+        sym       (sanitize-placeholder (str (gensym (str field "_"))))
+        expr-name (str "#n" sym)
+        expr-val  (str ":v" sym)]
+    {:field     field
+     :arg       val
+     :sym       sym
+     :expr-name expr-name
+     :expr-val  expr-val}))
 
-(defn generate-value-placeholder [value] (gen-placeholder ":" value))
+(defn- include-op [expr op-keywd op expr-part]
+  (update-in expr [:ops] conj
+             (merge op
+                    {:op        op-keywd
+                     :expr-part expr-part})))
 
-(defmulti resolve-expr-value #(class %))
+(defn add [expr field val]
+  (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
+    (include-op expr :add op (str expr-name " " expr-val))))
 
-(defmethod resolve-expr-value clojure.lang.Symbol [x] (deref (resolve x)))
+(defn set
+  ([expr field val]
+   (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
+     (include-op expr :set op (str expr-name " = " expr-val))))
+  ([expr field operator val]
+   (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
+     (include-op expr :set op (str expr-name " = " expr-name " " operator " " expr-val))))
+  ([expr field other-field operator val]
+   (let [{:keys [expr-name expr-val] :as op} (new-op field val)
+         other-op (new-op other-field nil)]
+     (-> expr
+         (include-op :set op (str expr-name " = " (:expr-name other-op) " " operator " " expr-val))
+         (update-in [:ops] conj
+                    (-> other-op
+                        (select-keys [:expr-name :field])
+                        (assoc :op :set)))))))
 
-(defmethod resolve-expr-value :default [x] x)
+(defn delete [expr field val]
+  (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
+    (include-op expr :delete op (str expr-name " " expr-val))))
 
-(defn handle-form [[name & parts]]
-  (cond
-    (= 'add name) (reduce
-                   (fn [acc [path upd]]
-                     (let [gpath (generate-name-placeholder path)
-                           gupdate (generate-value-placeholder upd)]
-                       (-> acc
-                           (update :expression #(vec (conj % [gpath gupdate])))
-                           (update :attr-names #(assoc % gpath path))
-                           (update :attr-values #(assoc % gupdate (resolve-expr-value upd))))))
-                   {:type :add}
-                   parts)))
+(defn remove [expr field]
+  (let [{:keys [expr-name expr-val] :as op} (new-op field nil)]
+    (include-op expr :remove op expr-name)))
 
-(defmulti render-update-expression (fn [args] (first args)))
+(defn- build-expression [ops]
+  (->> ops
+       (group-by :op)
+       (into (sorted-map))
+       (reduce (fn [ex [op ops]]
+                 (prn '>> ops)
+                 (->> ops
+                      (map :expr-part)
+                      (st/join ", ")
+                      (str ex (when ex " ") (st/upper-case (name op)) " ")))
+               nil)))
 
-(defmethod render-update-expression :default [[t _]] (throw (ex-info "Can't handle type" {:type t})))
+(defn- attr-map [name-or-value key ops]
+  (->> ops
+       (map (juxt name-or-value key))
+       ;; (remove #(some nil? %))
+       (into {})))
 
-(defmethod render-update-expression :add [[_ pairs]]
-  (->> pairs
-       (map #(clojure.string/join " " %))
-       (clojure.string/join ", ")))
-
-(defn type-kwd->type-expr [kwd] (-> kwd name clojure.string/upper-case))
-
-(defn reduce-partial-exprs [partial-type partials]
-  (->
-   (reduce (fn [{:keys [update-expression expression-attribute-names expression-attribute-values]
-                 :as acc}
-                {:keys [type expression attr-names attr-values]}]
-             {:update-expression (vec (conj update-expression (render-update-expression [partial-type expression])))
-              :expression-attribute-names (merge expression-attribute-names attr-names)
-              :expression-attribute-values (merge expression-attribute-values attr-values)})
-           {}
-           partials)
-   (update :update-expression #(str (type-kwd->type-expr partial-type) " " (first %)))))
-
-(defn expr [& forms]
-  (->>
-   forms
-   (map handle-form)
-   (group-by :type)
-   (map (fn [[t partials]] (reduce-partial-exprs t partials)))))
+(defn expr [{:keys [ops] :as expr}]
+  {:update-expression (build-expression ops)
+   :expression-attribute-names (attr-map :expr-name :field ops)
+   :expression-attribute-values (attr-map :expr-val :arg ops)})
