@@ -22,15 +22,18 @@
    []
    field-path))
 
-(defn field-path->str [field]
+(defn field-path->str [field & [join-str]]
   (if (sequential? field)
-    (st/join "_" (map field->str field))
+    (st/join (or join-str "_") (map field->str field))
     (field->str field)))
 
 (defn- new-op [op field val expr-part-fn]
   (let [f         (field-path->str field)
         sym       (sanitize-placeholder (str (gensym (str f "_"))))
-        expr-name (str "#n" sym)
+        expr-name (str "#n"
+                       (if (sequential? field)
+                         (field-path->str field ".")
+                         sym))
         expr-val  (str ":v" sym)
         o         {:op        op
                    :field     (if (sequential? field)
