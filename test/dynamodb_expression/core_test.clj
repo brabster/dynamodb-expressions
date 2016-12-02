@@ -109,15 +109,31 @@
                          (dx/add [:fish 0] 21)
                          dx/expr)
           parsed-exp (g/parse update-expression)]
+      (testing "set"
+        (is (= (:ops (dx/set (dx/update-expr nil) [:something :else] + 1))
+               [{:op        :set,
+                 :field     "else",
+                 :val       1,
+                 :expr-name "#nsomething_else_G__7",
+                 :expr-val  ":vsomething_else_G__7",
+                 :expr-part "#nsomething_else_G__7 = #nsomething_else_G__7 + :vsomething_else_G__7"}
+                {:op        :set,
+                 :field     "something",
+                 :val       nil,
+                 :expr-name "#nsomething_G__8",
+                 :expr-val  ":vsomething_G__8"}])))
       (testing "names"
         (is (= {"#nsomething_G__1" "something"
                 "#nelse_G__2"      "else"
                 "#nnew_G__3"       "new"
-                "#nfish_G__4"      "fish"}
+                "#nfish__0__G__4"  "fish[0]"}
                expression-attribute-names)))
       (testing "values"
         (is (= {":vsomething_else_G__1" 12
-                ":vsomething_new_G__2"  "munge"
-                ":vfish_0_G__3"         21} expression-attribute-values)))
+                ":vsomething_new_G__3"  "munge"
+                ":vfish__0__G__5"       21} expression-attribute-values)))
       (testing "expression"
-        (is-expr= "ADD #nsomething_G__1.#nelse_G__2 :velse_G__2, #nsomething_G__1.#nnew_G__3 :vnew_G__3, #nfish_G__4 :vfish_G__4" update-expression)))))
+        (is-expr= (str "ADD #nsomething_G__1.#nsomething_else_G__2 :vsomething_else_G__2, "
+                       "#nsomething_G__1.#nsomething_new_G__3 :vsomething_new_G__3, "
+                       "#nfish__0__G__4 :vfish_0_G__4")
+                  update-expression)))))

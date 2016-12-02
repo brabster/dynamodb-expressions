@@ -11,18 +11,18 @@
 
 (defn field->str [f]
   (cond (or (keyword? f) (symbol? f) (string? f)) (name f)
-        (number? f)                              (str f)
-        :default                                 (str f)))
+        (number? f)                               (str "[" f "]")
+        :default                                  (str f)))
 
 (defn- new-op [op field val expr-part-fn]
-  (let [field     (if (sequential? field)
+  (let [f         (if (sequential? field)
                     (st/join "_" (map field->str field))
                     (field->str field))
-        sym       (sanitize-placeholder (str (gensym (str field "_"))))
+        sym       (sanitize-placeholder (str (gensym (str f "_"))))
         expr-name (str "#n" sym)
         expr-val  (str ":v" sym)
         o         {:op        op
-                   :field     field
+                   :field     (field->str (if (sequential? field) (last field) field))
                    :val       val
                    :expr-name expr-name
                    :expr-val  expr-val}]
@@ -30,11 +30,23 @@
       (assoc o :expr-part (expr-part-fn o))
       o)))
 
-(defn- include-op [expr op]
-  (update-in expr [:ops] conj op))
+#_ (defn part-> [f & args]
+     #(apply f % args))
+
+(defn- include-op
+  ([expr op]
+   (update-in expr [:ops] conj op))
+  ([expr op field val expr-part-fn]
+   (if (sequential? field)
+     (->> (reductions conj [] (butlast field))
+          (core-remove empty?)
+          (map #(new-op op % nil nil))
+          (concat [(new-op op field val expr-part-fn)])
+          (reduce include-op expr))
+     (include-op expr (new-op op field val expr-part-fn)))))
 
 (defn add [expr field val]
-  (include-op expr (new-op :add field val #(str (:expr-name %) " " (:expr-val %)))))
+  (include-op expr :add field val #(str (:expr-name %) " " (:expr-val %))))
 
 (def ^:private operator->str {'+ "+"
                               '- "-"
@@ -45,20 +57,20 @@
 
 (defn set
   ([expr field val]
-   (include-op expr (new-op :set field val #(str (:expr-name %) " = " (:expr-val %)))))
+   (include-op expr :set field val #(str (:expr-name %) " = " (:expr-val %))))
   ([expr field operator val]
-   (include-op expr (new-op :set field val #(str (:expr-name %) " = " (:expr-name %) " " (operator->str operator operator) " " (:expr-val %)))))
+   (include-op expr :set field val #(str (:expr-name %) " = " (:expr-name %) " " (operator->str operator operator) " " (:expr-val %))))
   ([expr field other-field operator val]
    (let [other-op (new-op :set other-field nil nil)]
      (-> expr
-         (include-op (new-op :set field val #(str (:expr-name %) " = " (:expr-name other-op) " " (operator->str operator operator) " " (:expr-val %))))
+         (include-op :set field val #(str (:expr-name %) " = " (:expr-name other-op) " " (operator->str operator operator) " " (:expr-val %)))
          (include-op other-op)))))
 
 (defn delete [expr field val]
-  (include-op expr (new-op :delete field val #(str (:expr-name %) " " (:expr-val %)))))
+  (include-op expr :delete field val #(str (:expr-name %) " " (:expr-val %))))
 
 (defn remove [expr field]
-  (include-op expr (new-op :remove field nil :expr-name)))
+  (include-op expr :remove field nil :expr-name))
 
 (defn- build-expression [ops]
   (->> ops
