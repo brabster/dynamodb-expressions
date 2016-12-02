@@ -97,3 +97,16 @@
       (is (= {"#nsomething_G__1" "something"} expression-attribute-names))
       (is (= {":vsomething_G__1" nil} expression-attribute-values))
       (is-expr= "REMOVE #nsomething_G__1" update-expression))))
+
+(deftest path-test
+  (testing "Yet another basic integration test"
+    (let [{:keys [update-expression expression-attribute-names expression-attribute-values]
+           :as ex} (-> (dx/update-expr {:id "12"})
+                       (dx/add [:something :else] 12)
+                       (dx/add [:something :new] "else")
+                       (dx/add [:fish 0] 12)
+                       dx/expr)
+          parsed-exp (g/parse update-expression)]
+      (is (= {"#nsomething_G__1" "something"} expression-attribute-names))
+      (is (= {":vsomething_G__1" nil} expression-attribute-values))
+      (is-expr= "REMOVE #nsomething_G__1" update-expression))))
