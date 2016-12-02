@@ -10,6 +10,11 @@
                              (str prefix "G__" (swap! cnt inc)))]
         (f)))))
 
+(defn is-expr= [expected-expr generated-expr]
+  (is (vector? (g/parse expected-expr)) "Expected expression not valid")
+  (is (vector? (g/parse generated-expr)) "Generated expression not valid")
+  (is (= expected-expr generated-expr) "Unexpected expression"))
+
 (deftest a-test
   (testing "A basic integration test"
     (let [x 4
@@ -20,14 +25,16 @@
                        (dx/add "-goof-" 76)
                        dx/expr)
           parsed-exp (g/parse update-expression)]
-      (is (= expression-attribute-names {"#nfoo_bar_G__1" "foo.bar"
-                                         "#nbar_baz_G__2" "bar.baz"
-                                         "#n_goof__G__3" "-goof-"}))
-      (is (= expression-attribute-values {":vfoo_bar_G__1" 4
-                                          ":vbar_baz_G__2" 8
-                                          ":v_goof__G__3" 76}))
-      (is (= update-expression "ADD #nfoo_bar_G__1 :vfoo_bar_G__1, #nbar_baz_G__2 :vbar_baz_G__2, #n_goof__G__3 :v_goof__G__3"))
-      (is (vector? parsed-exp)))))
+      (is (= {"#nfoo_bar_G__1" "foo.bar"
+              "#nbar_baz_G__2" "bar.baz"
+              "#n_goof__G__3" "-goof-"}
+             expression-attribute-names))
+      (is (= {":vfoo_bar_G__1" 4
+              ":vbar_baz_G__2" 8
+              ":v_goof__G__3" 76}
+             expression-attribute-values))
+      (is-expr= "ADD #nfoo_bar_G__1 :vfoo_bar_G__1, #nbar_baz_G__2 :vbar_baz_G__2, #n_goof__G__3 :v_goof__G__3"
+                update-expression))))
 
 (deftest set-and-add-test
   (testing "Another basic integration test"
@@ -38,32 +45,31 @@
                        (dx/add :something-else (* x 8))
                        dx/expr)
           parsed-exp (g/parse update-expression)]
-      (is (= expression-attribute-names {"#nsomething_G__1" "something"
-                                         "#nsomething_else_G__2" "something-else"}))
-      (is (= expression-attribute-values {":vsomething_G__1" 4
-                                          ":vsomething_else_G__2" 32}))
-      (is (vector? (g/parse "ADD #nsomething_else_G__2 :vsomething_else_G__2 SET #nsomething_G__1 = :vsomething_G__1")))
-      (is (= update-expression "ADD #nsomething_else_G__2 :vsomething_else_G__2 SET #nsomething_G__1 = :vsomething_G__1"))
-      (is (vector? parsed-exp)))))
+      (is (= {"#nsomething_G__1" "something"
+              "#nsomething_else_G__2" "something-else"}
+             expression-attribute-names))
+      (is (= {":vsomething_G__1" 4
+              ":vsomething_else_G__2" 32}
+             expression-attribute-values))
+      (is-expr= update-expression "ADD #nsomething_else_G__2 :vsomething_else_G__2 SET #nsomething_G__1 = :vsomething_G__1"))))
 
 (deftest set-test
   (testing "Another basic integration test"
     (let [x 4
           {:keys [update-expression expression-attribute-names expression-attribute-values]
            :as ex} (-> (dx/update-expr)
-                       (dx/set :fish '+ 33)
-                       (dx/set :something :something-else '+ 4)
+                       (dx/set :fish + 33)
+                       (dx/set :something :something-else :+ 4)
                        dx/expr)
           parsed-exp (g/parse update-expression)]
-      (is (= expression-attribute-names {"#nfish_G__1" "fish"
-                                         "#nsomething_G__2" "something"
-                                         "#nsomething_else_G__3" "something-else"}))
-      (is (= expression-attribute-values {":vsomething_G__2" 4
-                                          ":vfish_G__1" 33}))
-      (let [expected-exp "SET #nfish_G__1 = #nfish_G__1 + :vfish_G__1, #nsomething_G__2 = #nsomething_else_G__3 + :vsomething_G__2"]
-        (is (vector? (g/parse expected-exp)))
-        (is (= update-expression expected-exp)))
-      (is (vector? parsed-exp)))))
+      (is (= {"#nfish_G__1" "fish"
+              "#nsomething_G__2" "something"
+              "#nsomething_else_G__3" "something-else"}
+             expression-attribute-names))
+      (is (= {":vsomething_G__2" 4
+              ":vfish_G__1" 33}
+             expression-attribute-values))
+      (is-expr= "SET #nfish_G__1 = #nfish_G__1 + :vfish_G__1, #nsomething_G__2 = #nsomething_else_G__3 + :vsomething_G__2" update-expression))))
 
 (deftest delete-test
   (testing "Yet another basic integration test"
@@ -72,11 +78,9 @@
                        (dx/delete :something "value")
                        dx/expr)
           parsed-exp (g/parse update-expression)]
-      (is (= expression-attribute-names {"#nsomething_G__1" "something"}))
-      (is (= expression-attribute-values {":vsomething_G__1" "value"}))
-      (is (vector? (g/parse "DELETE #nsomething_G__1 :vsomething_G__1")))
-      (is (= update-expression "DELETE #nsomething_G__1 :vsomething_G__1"))
-      (is (vector? parsed-exp)))))
+      (is (= {"#nsomething_G__1" "something"} expression-attribute-names))
+      (is (= {":vsomething_G__1" "value"} expression-attribute-values))
+      (is-expr= "DELETE #nsomething_G__1 :vsomething_G__1" update-expression))))
 
 (deftest remove-test
   (testing "Yet another basic integration test"
@@ -85,8 +89,6 @@
                        (dx/remove :something)
                        dx/expr)
           parsed-exp (g/parse update-expression)]
-      (is (= expression-attribute-names {"#nsomething_G__1" "something"}))
-      (is (= expression-attribute-values {":vsomething_G__1" nil}))
-      (is (vector? (g/parse "REMOVE #nsomething_G__1")))
-      (is (= update-expression "REMOVE #nsomething_G__1"))
-      (is (vector? parsed-exp)))))
+      (is (= {"#nsomething_G__1" "something"} expression-attribute-names))
+      (is (= {":vsomething_G__1" nil} expression-attribute-values))
+      (is-expr= "REMOVE #nsomething_G__1" update-expression))))

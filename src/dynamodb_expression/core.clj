@@ -1,4 +1,5 @@
 (ns dynamodb-expression.core
+  (:refer-clojure :rename {remove core-remove})
   (:require [clojure.string :as st]))
 
 (defn- sanitize-placeholder [ph]
@@ -28,18 +29,25 @@
   (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
     (include-op expr :add op (str expr-name " " expr-val))))
 
+(def ^:private operator->str {'+ "+"
+                              '- "-"
+                              +  "+"
+                              -  "-"
+                              :+ "+"
+                              :- "-"})
+
 (defn set
   ([expr field val]
    (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
      (include-op expr :set op (str expr-name " = " expr-val))))
   ([expr field operator val]
    (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
-     (include-op expr :set op (str expr-name " = " expr-name " " operator " " expr-val))))
+     (include-op expr :set op (str expr-name " = " expr-name " " (operator->str operator) " " expr-val))))
   ([expr field other-field operator val]
    (let [{:keys [expr-name expr-val] :as op} (new-op field val)
          other-op (new-op other-field nil)]
      (-> expr
-         (include-op :set op (str expr-name " = " (:expr-name other-op) " " operator " " expr-val))
+         (include-op :set op (str expr-name " = " (:expr-name other-op) " " (operator->str operator) " " expr-val))
          (update-in [:ops] conj
                     (-> other-op
                         (select-keys [:expr-name :field])
@@ -67,7 +75,7 @@
 (defn- attr-map [name-or-value key ops]
   (->> ops
        (map (juxt name-or-value key))
-       (clojure.core/remove #(-> % first nil?))
+       (core-remove #(-> % first nil?))
        (into {})))
 
 (defn expr [{:keys [ops] :as expr}]
