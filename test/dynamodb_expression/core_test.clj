@@ -10,10 +10,12 @@
                              (str prefix "G__" (swap! cnt inc)))]
         (f)))))
 
-(defn is-expr= [expected-expr generated-expr]
-  (is (vector? (g/parse expected-expr)) (str "Expected expression not valid : " expected-expr))
-  (is (vector? (g/parse generated-expr)) (str "Generated expression not valid : " generated-expr))
-  (is (= expected-expr generated-expr) (str "Unexpected expression : " generated-expr)))
+(defn invalid-expr? [expected-expr generated-expr]
+  (cond
+    (not (vector? (g/parse expected-expr))) (str "Expected expression not valid : " expected-expr)
+    (not (vector? (g/parse generated-expr))) (str "Generated expression not valid : " generated-expr)
+    (not= expected-expr generated-expr) ["Unexpected expression" generated-expr "expected" expected-expr]
+    :else false))
 
 (deftest a-test
   (testing "A basic integration test"
@@ -35,8 +37,9 @@
               ":vbar_baz_G__2" 8
               ":v_goof__G__3" 76}
              expression-attribute-values))
-      (is-expr= "ADD #nfoo_bar_G__1 :vfoo_bar_G__1, #nbar_baz_G__2 :vbar_baz_G__2, #n_goof__G__3 :v_goof__G__3"
-                update-expression))))
+      (is (not
+           (invalid-expr? "ADD #nfoo_bar_G__1 :vfoo_bar_G__1, #nbar_baz_G__2 :vbar_baz_G__2, #n_goof__G__3 :v_goof__G__3"
+                          update-expression))))))
 
 (deftest set-and-add-test
   (testing "Another basic integration test"
@@ -56,7 +59,8 @@
               ":vsomething_else_G__2" 32
               ":vfish_G__3" 12}
              expression-attribute-values))
-      (is-expr= update-expression "SET #nsomething_G__1 = :vsomething_G__1 ADD #nsomething_else_G__2 :vsomething_else_G__2, #nfish_G__3 :vfish_G__3"))))
+      (is (not
+           (invalid-expr? update-expression "SET #nsomething_G__1 = :vsomething_G__1 ADD #nsomething_else_G__2 :vsomething_else_G__2, #nfish_G__3 :vfish_G__3"))))))
 
 (deftest set-test
   (testing "Another basic integration test"
@@ -74,9 +78,10 @@
       (is (= {":vsomething_G__3" 4
               ":vfish_G__1" 33}
              expression-attribute-values))
-      (is-expr= (str "SET #nfish_G__1 = #nfish_G__1 + :vfish_G__1, "
-                     "#nsomething_G__3 = #nsomething_else_G__2 + :vsomething_G__3")
-                update-expression))))
+      (is (not
+           (invalid-expr? (str "SET #nfish_G__1 = #nfish_G__1 + :vfish_G__1, "
+                               "#nsomething_G__3 = #nsomething_else_G__2 + :vsomething_G__3")
+                          update-expression))))))
 
 (deftest delete-test
   (testing "Yet another basic integration test"
@@ -87,7 +92,8 @@
           parsed-exp (g/parse update-expression)]
       (is (= {"#nsomething_G__1" "something"} expression-attribute-names))
       (is (= {":vsomething_G__1" "value"} expression-attribute-values))
-      (is-expr= "DELETE #nsomething_G__1 :vsomething_G__1" update-expression))))
+      (is (not
+           (invalid-expr? "DELETE #nsomething_G__1 :vsomething_G__1" update-expression))))))
 
 (deftest remove-test
   (testing "Yet another basic integration test"
@@ -98,7 +104,8 @@
           parsed-exp (g/parse update-expression)]
       (is (= {"#nsomething_G__1" "something"} expression-attribute-names))
       (is (= {} expression-attribute-values))
-      (is-expr= "REMOVE #nsomething_G__1" update-expression))))
+      (is (not
+           (invalid-expr? "REMOVE #nsomething_G__1" update-expression))))))
 
 (deftest path-test
   (testing "Yet another basic integration test"
@@ -114,26 +121,28 @@
                [{:op        :set,
                  :field     "else",
                  :val       1,
-                 :expr-name "#nsomething_else_G__7",
-                 :expr-val  ":vsomething_else_G__7",
-                 :expr-part "#nsomething_else_G__7 = #nsomething_else_G__7 + :vsomething_else_G__7"}
+                 :expr-name "#nsomething_else_G__6",
+                 :expr-val  ":vsomething_else_G__6",
+                 :expr-part "#nsomething_else_G__6 = #nsomething_else_G__6 + :vsomething_else_G__6"}
                 {:op        :set,
                  :field     "something",
                  :val       nil,
-                 :expr-name "#nsomething_G__8",
-                 :expr-val  ":vsomething_G__8"}])))
+                 :expr-name "#nsomething_G__7",
+                 :expr-val  ":vsomething_G__7"}])))
       (testing "names"
-        (is (= {"#nsomething_G__1" "something"
-                "#nelse_G__2"      "else"
-                "#nnew_G__3"       "new"
-                "#nfish__0__G__4"  "fish[0]"}
+        (is (= {"#nsomething_else_G__1" "else"
+                "#nsomething_G__2"      "something"
+                "#nsomething_new_G__3"  "new"
+                "#nsomething_G__4"      "something"
+                "#nfish_0_G__5"         "fish[0]"}
                expression-attribute-names)))
       (testing "values"
         (is (= {":vsomething_else_G__1" 12
                 ":vsomething_new_G__3"  "munge"
-                ":vfish__0__G__5"       21} expression-attribute-values)))
+                ":vfish_0_G__5"         21} expression-attribute-values)))
       (testing "expression"
-        (is-expr= (str "ADD #nsomething_G__1.#nsomething_else_G__2 :vsomething_else_G__2, "
-                       "#nsomething_G__1.#nsomething_new_G__3 :vsomething_new_G__3, "
-                       "#nfish__0__G__4 :vfish_0_G__4")
-                  update-expression)))))
+        (is (not
+             (invalid-expr? (str "ADD #nsomething_G__1.#nsomething_else_G__2 :vsomething_else_G__2, "
+                                 "#nsomething_G__1.#nsomething_new_G__3 :vsomething_new_G__3, "
+                                 "#nfish__0__G__4 :vfish_0_G__4")
+                            update-expression)))))))

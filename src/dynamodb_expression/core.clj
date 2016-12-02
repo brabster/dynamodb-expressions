@@ -9,20 +9,33 @@
   {:ops []
    :key key})
 
-(defn field->str [f]
-  (cond (or (keyword? f) (symbol? f) (string? f)) (name f)
-        (number? f)                               (str "[" f "]")
-        :default                                  (str f)))
+(defn- field->str [f]
+  (if (or (keyword? f) (symbol? f))
+    (name f)
+    (str f)))
+
+(defn- collapse-numbers-backwards [field-path]
+  (reduce
+   #(if (number? %2)
+      (assoc %1 (dec (count %1)) (str (last %1) "[" %2 "]"))
+      (conj %1 (field->str %2)))
+   []
+   field-path))
+
+(defn field-path->str [field]
+  (if (sequential? field)
+    (st/join "_" (map field->str field))
+    (field->str field)))
 
 (defn- new-op [op field val expr-part-fn]
-  (let [f         (if (sequential? field)
-                    (st/join "_" (map field->str field))
-                    (field->str field))
+  (let [f         (field-path->str field)
         sym       (sanitize-placeholder (str (gensym (str f "_"))))
         expr-name (str "#n" sym)
         expr-val  (str ":v" sym)
         o         {:op        op
-                   :field     (field->str (if (sequential? field) (last field) field))
+                   :field     (if (sequential? field)
+                                (last (collapse-numbers-backwards field))
+                                (field->str field))
                    :val       val
                    :expr-name expr-name
                    :expr-val  expr-val}]
@@ -38,11 +51,12 @@
    (update-in expr [:ops] conj op))
   ([expr op field val expr-part-fn]
    (if (sequential? field)
-     (->> (reductions conj [] (butlast field))
-          (core-remove empty?)
-          (map #(new-op op % nil nil))
-          (concat [(new-op op field val expr-part-fn)])
-          (reduce include-op expr))
+     (let [field-path (collapse-numbers-backwards field)]
+       (->> (reductions conj [] (butlast field-path))
+            (core-remove empty?)
+            (map #(new-op op % nil nil))
+            (concat [(new-op op field val expr-part-fn)])
+            (reduce include-op expr)))
      (include-op expr (new-op op field val expr-part-fn)))))
 
 (defn add [expr field val]
