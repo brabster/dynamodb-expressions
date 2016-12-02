@@ -59,7 +59,7 @@
           {:keys [update-expression expression-attribute-names expression-attribute-values]
            :as ex} (-> (dx/update-expr)
                        (dx/set :fish + 33)
-                       (dx/set :something :something-else :+ 4)
+                       (dx/set :something :something-else "+" 4)
                        dx/expr)
           parsed-exp (g/parse update-expression)]
       (is (= {"#nfish_G__1" "fish"
