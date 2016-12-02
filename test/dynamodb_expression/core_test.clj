@@ -18,13 +18,15 @@
 (deftest a-test
   (testing "A basic integration test"
     (let [x 4
-          {:keys [update-expression expression-attribute-names expression-attribute-values]
-           :as ex} (-> (dx/update-expr)
+          id {:id "12"}
+          {:keys [update-expression expression-attribute-names expression-attribute-values key]
+           :as ex} (-> (dx/update-expr id)
                        (dx/add "foo.bar" x)
                        (dx/add :bar.baz 8)
                        (dx/add "-goof-" 76)
                        dx/expr)
           parsed-exp (g/parse update-expression)]
+      (is (= id key))
       (is (= {"#nfoo_bar_G__1" "foo.bar"
               "#nbar_baz_G__2" "bar.baz"
               "#n_goof__G__3" "-goof-"}
@@ -40,7 +42,7 @@
   (testing "Another basic integration test"
     (let [x 4
           {:keys [update-expression expression-attribute-names expression-attribute-values]
-           :as ex} (-> (dx/update-expr)
+           :as ex} (-> (dx/update-expr {:id "12"})
                        (dx/set :something x)
                        (dx/add :something-else (* x 8))
                        dx/expr)
@@ -57,7 +59,7 @@
   (testing "Another basic integration test"
     (let [x 4
           {:keys [update-expression expression-attribute-names expression-attribute-values]
-           :as ex} (-> (dx/update-expr)
+           :as ex} (-> (dx/update-expr {:id "12"})
                        (dx/set :fish + 33)
                        (dx/set :something :something-else "+" 4)
                        dx/expr)
@@ -74,7 +76,7 @@
 (deftest delete-test
   (testing "Yet another basic integration test"
     (let [{:keys [update-expression expression-attribute-names expression-attribute-values]
-           :as ex} (-> (dx/update-expr)
+           :as ex} (-> (dx/update-expr {:id "12"})
                        (dx/delete :something "value")
                        dx/expr)
           parsed-exp (g/parse update-expression)]
@@ -85,7 +87,7 @@
 (deftest remove-test
   (testing "Yet another basic integration test"
     (let [{:keys [update-expression expression-attribute-names expression-attribute-values]
-           :as ex} (-> (dx/update-expr)
+           :as ex} (-> (dx/update-expr {:id "12"})
                        (dx/remove :something)
                        dx/expr)
           parsed-exp (g/parse update-expression)]

@@ -5,8 +5,9 @@
 (defn- sanitize-placeholder [ph]
   (st/replace ph #"[^0-9a-zA-Z_]" "_"))
 
-(defn update-expr []
-  {:ops []})
+(defn update-expr [key]
+  {:ops []
+   :key key})
 
 (defn- new-op [field val]
   (let [field     (name field)
@@ -78,7 +79,8 @@
        (core-remove #(-> % first nil?))
        (into {})))
 
-(defn expr [{:keys [ops] :as expr}]
+(defn expr [{:keys [key ops] :as expr}]
   {:update-expression (build-expression ops)
    :expression-attribute-names (attr-map :expr-name :field ops)
-   :expression-attribute-values (attr-map :expr-val :arg ops)})
+   :expression-attribute-values (attr-map :expr-val :arg ops)
+   :key key})
