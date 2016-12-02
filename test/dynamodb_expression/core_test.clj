@@ -13,7 +13,7 @@
 (defn is-expr= [expected-expr generated-expr]
   (is (vector? (g/parse expected-expr)) (str "Expected expression not valid : " expected-expr))
   (is (vector? (g/parse generated-expr)) (str "Generated expression not valid : " generated-expr))
-  (is (= expected-expr generated-expr) (str "Unexpected expression" generated-expr)))
+  (is (= expected-expr generated-expr) (str "Unexpected expression : " generated-expr)))
 
 (deftest a-test
   (testing "A basic integration test"
@@ -68,13 +68,15 @@
                        dx/expr)
           parsed-exp (g/parse update-expression)]
       (is (= {"#nfish_G__1" "fish"
-              "#nsomething_G__2" "something"
-              "#nsomething_else_G__3" "something-else"}
+              "#nsomething_G__3" "something"
+              "#nsomething_else_G__2" "something-else"}
              expression-attribute-names))
-      (is (= {":vsomething_G__2" 4
+      (is (= {":vsomething_G__3" 4
               ":vfish_G__1" 33}
              expression-attribute-values))
-      (is-expr= "SET #nfish_G__1 = #nfish_G__1 + :vfish_G__1, #nsomething_G__2 = #nsomething_else_G__3 + :vsomething_G__2" update-expression))))
+      (is-expr= (str "SET #nfish_G__1 = #nfish_G__1 + :vfish_G__1, "
+                     "#nsomething_G__3 = #nsomething_else_G__2 + :vsomething_G__3")
+                update-expression))))
 
 (deftest delete-test
   (testing "Yet another basic integration test"
@@ -95,7 +97,7 @@
                        dx/expr)
           parsed-exp (g/parse update-expression)]
       (is (= {"#nsomething_G__1" "something"} expression-attribute-names))
-      (is (= {":vsomething_G__1" nil} expression-attribute-values))
+      (is (= {} expression-attribute-values))
       (is-expr= "REMOVE #nsomething_G__1" update-expression))))
 
 (deftest path-test
