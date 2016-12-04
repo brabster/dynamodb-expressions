@@ -12,4 +12,9 @@
                               :sign-releases false}]]
   :dependencies [[org.clojure/clojure "1.8.0"]]
   :target-path "target/%s"
-  :profiles {:dev {:dependencies [[instaparse "1.4.3"]]}})
+  :profiles {:dev {:dependencies [[instaparse "1.4.3"]
+                                  [docker-fixture "0.1.1"]
+                                  [amazonica "0.3.78" :exclusions [com.amazonaws/aws-java-sdk
+                                                                   com.amazonaws/amazon-kinesis-client]]
+                                  [com.amazonaws/aws-java-sdk-core "1.11.63"]
+                                  [com.amazonaws/aws-java-sdk-dynamodb "1.11.63"]]}})
