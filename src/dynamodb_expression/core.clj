@@ -7,13 +7,13 @@
 (defn update-expr []
   {:ops []})
 
-(defn- new-op [field val]
+(defn- new-op [field value]
   (let [field     (name field)
         sym       (sanitize-placeholder (str (gensym (str field "_"))))
         expr-name (str "#n" sym)
         expr-val  (str ":v" sym)]
     {:field     field
-     :arg       val
+     :arg       value
      :sym       sym
      :expr-name expr-name
      :expr-val  expr-val}))
@@ -24,19 +24,19 @@
                     {:op        op-keywd
                      :expr-part expr-part})))
 
-(defn add [expr field val]
-  (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
+(defn add [expr field value]
+  (let [{:keys [expr-name expr-val] :as op} (new-op field value)]
     (include-op expr :add op (str expr-name " " expr-val))))
 
 (defn set
-  ([expr field val]
-   (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
+  ([expr field value]
+   (let [{:keys [expr-name expr-val] :as op} (new-op field value)]
      (include-op expr :set op (str expr-name " = " expr-val))))
-  ([expr field operator val]
-   (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
+  ([expr field operator value]
+   (let [{:keys [expr-name expr-val] :as op} (new-op field value)]
      (include-op expr :set op (str expr-name " = " expr-name " " operator " " expr-val))))
-  ([expr field other-field operator val]
-   (let [{:keys [expr-name expr-val] :as op} (new-op field val)
+  ([expr field other-field operator value]
+   (let [{:keys [expr-name expr-val] :as op} (new-op field value)
          other-op (new-op other-field nil)]
      (-> expr
          (include-op :set op (str expr-name " = " (:expr-name other-op) " " operator " " expr-val))
@@ -45,9 +45,9 @@
                         (select-keys [:expr-name :field])
                         (assoc :op :set)))))))
 
-(defn delete [expr field val]
-  (let [{:keys [expr-name expr-val] :as op} (new-op field val)]
-    (include-op expr :delete op (str expr-name " " expr-val))))
+#_(defn delete [expr field value]
+    (let [{:keys [expr-name expr-val] :as op} (new-op field value)]
+      (include-op expr :delete op (str expr-name " " expr-val))))
 
 (defn remove [expr field]
   (let [{:keys [expr-name expr-val] :as op} (new-op field nil)]
@@ -58,20 +58,27 @@
        (group-by :op)
        (into (sorted-map))
        (reduce (fn [ex [op ops]]
-                 (prn '>> ops)
+                 #_(prn '>> ops)
                  (->> ops
                       (map :expr-part)
                       (st/join ", ")
                       (str ex (when ex " ") (st/upper-case (name op)) " ")))
                nil)))
 
-(defn- attr-map [name-or-value key ops]
+(defn- attr-map [name-or-value k ops]
   (->> ops
-       (map (juxt name-or-value key))
-       ;; (remove #(some nil? %))
+       (map (juxt name-or-value k))
+       (filter second)
        (into {})))
 
+(defn- assoc-when [m condition k v]
+  (if condition
+    (assoc m k v)
+    m))
+
 (defn expr [{:keys [ops] :as expr}]
-  {:update-expression (build-expression ops)
-   :expression-attribute-names (attr-map :expr-name :field ops)
-   :expression-attribute-values (attr-map :expr-val :arg ops)})
+  (let [names (attr-map :expr-name :field ops)
+        values (attr-map :expr-val :arg ops)]
+    (-> {:update-expression (build-expression ops)}
+        (assoc-when (not (empty? names)) :expression-attribute-names names)
+        (assoc-when (not (empty? values)) :expression-attribute-values values))))
