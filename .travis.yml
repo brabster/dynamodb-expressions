@@ -7,7 +7,7 @@ cache:
     - $HOME/.m2
 
 script:
- - lein check
+ - lein qa
 
 deploy:
   - provider: script
