@@ -1,4 +1,9 @@
-* dynamodb-expression
+* dynamodb-expressions
+
+[[https://travis-ci.org/brabster/dynamodb-expressions][https://img.shields.io/travis/brabster/dynamodb-expressions.svg]]
+[[https://github.com/brabster/dynamodb-expressions/releases/latest][https://img.shields.io/github/release/brabster/dynamodb-expressions.svg]]
+
+Get the latest version on [[https://clojars.org/dynamodb-expressions][Clojars]]
 
 A WIP attempt to write a DSL for DynamoDB expressions in Clojure. Not ready for real-world use yet!
 
