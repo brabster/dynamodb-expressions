@@ -37,23 +37,32 @@
     value-placeholder = ':' legal-name
     whitespace = ' '
     comma = ','
-    dot = '.'"))
+    dot = '.'"
+   :output-format :enlive))
+
+(def parsed? (complement insta/failure?))
 
 
 (deftest dynamodb-expression-grammar-test
   (testing "AWS documentation examples parse"
-    (is (vector? (parse "SET list[0] = :val1")))
-    (is (vector? (parse "REMOVE #m.nestedField1, #m.nestedField2")))
-    (is (vector? (parse "ADD aNumber :val2, anotherNumber :val3")))
-    (is (vector? (parse "DELETE aSet :val4")))
-    (is (vector? (parse "SET list[0] = :val1 REMOVE #m.nestedField1, #m.nestedField2 ADD aNumber :val2, anotherNumber :val3 DELETE aSet :val4")))
-    (is (vector? (parse "SET Price = Price - :p")))
-    (is (vector? (parse "REMOVE MyNumbers[1], MyNumbers[3]"))))
+    (is (parsed? (parse "SET list[0] = :val1")))
+    (is (parsed? (parse "REMOVE #m.nestedField1, #m.nestedField2")))
+    (is (parsed? (parse "ADD aNumber :val2, anotherNumber :val3")))
+    (is (parsed? (parse "DELETE aSet :val4")))
+    (is (parsed? (parse (clojure.string/replace "
+SET
+ list[0] = :val1
+ REMOVE
+ #m.nestedField1, #m.nestedField2
+ ADD aNumber :val2, anotherNumber :val3
+ DELETE aSet :val4" #"\n" ""))))
+    (is (parsed? (parse "SET Price = Price - :p")))
+    (is (parsed? (parse "REMOVE MyNumbers[1], MyNumbers[3]"))))
 
   (testing "Badly-formed examples don't parse"
     (testing "random word"
-      (is (map? (parse "foo"))))
+      (is (insta/failure? (parse "foo"))))
     (testing "extra comma between types of operation"
-      (is (map? (parse "SET list[0] = :val1, REMOVE #m.nestedField1, #m.nestedField2"))))
+      (is (insta/failure? (parse "SET list[0] = :val1, REMOVE #m.nestedField1, #m.nestedField2"))))
     (testing "missing comma between two of same type of operation"
-      (is (map? (parse "SET list[0] = :val1 REMOVE #m.nestedField1 #m.nestedField2"))))))
+      (is (insta/failure? (parse "SET list[0] = :val1 REMOVE #m.nestedField1 #m.nestedField2"))))))

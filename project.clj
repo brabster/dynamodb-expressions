@@ -34,6 +34,7 @@
             [lein-cloverage "1.0.6"]]
   :target-path "target/%s"
   :profiles {:dev {:dependencies [[instaparse "1.4.3"]
+                                  [enlive "1.1.6"]
                                   [docker-fixture "0.1.1"]
                                   [amazonica "0.3.78" :exclusions [com.amazonaws/aws-java-sdk
                                                                    com.amazonaws/amazon-kinesis-client]]
