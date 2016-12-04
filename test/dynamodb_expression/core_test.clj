@@ -67,15 +67,16 @@ SET
  #nfish_G__1 = #nfish_G__1 + :vfish_G__1,
  #nsomething_G__2 = #nsomething_G__2 + :vsomething_G__2"))))))
 
-(deftest delete-test
-  (testing "Yet another basic integration test"
-    (let [{:keys [update-expression expression-attribute-names expression-attribute-values]
-           :as ex} (-> (dx/update-expr)
-                       (dx/delete :something "value")
-                       dx/expr)]
-      (is (= expression-attribute-names {"#nsomething_G__1" "something"}))
-      (is (= expression-attribute-values {":vsomething_G__1" "value"}))
-      (is (= update-expression "DELETE #nsomething_G__1 :vsomething_G__1")))))
+#_(deftest delete-test
+    (testing "Yet another basic integration test"
+      (let [{:keys [update-expression expression-attribute-names expression-attribute-values]
+             :as ex} (-> (dx/update-expr)
+                         (dx/delete :something "value")
+                         dx/expr)]
+        (prn ex)
+        (is (= expression-attribute-names {"#nsomething_G__1" "something"}))
+        (is (= expression-attribute-values {":vsomething_G__1" "value"}))
+        (is (= update-expression "DELETE #nsomething_G__1 :vsomething_G__1")))))
 
 (deftest remove-test
   (testing "Yet another basic integration test"

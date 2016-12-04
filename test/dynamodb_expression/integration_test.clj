@@ -68,22 +68,23 @@
                            :table-name table-name
                            :key {:id "2"})))))
 
-  (testing "delete works"
-    (is (= {:item {:id "3" :things []}}
-           (do
-             (ddb/update-item creds
-                              (->
-                               (dx/update-expr)
-                               (dx/set :bar #{"foo"})
-                               (dx/expr)
-                               (assoc :table-name table-name)
-                               (assoc :key {:id "3"})))
-             (ddb/update-item creds
-                              (-> (dx/update-expr)
-                                  (dx/delete :bar "foo")
-                                  (dx/expr)
-                                  (assoc :table-name table-name)
-                                  (assoc :key {:id "3"})))
-             (ddb/get-item creds
-                           :table-name table-name
-                           :key {:id "3"}))))))
+  #_(testing "delete works"
+      (let [delete-expr (->
+                         (dx/update-expr)
+                         (dx/set :bar #{"foo"})
+                         (dx/expr)
+                         (assoc :table-name table-name)
+                         (assoc :key {:id "3"}))]
+        (prn delete-expr)
+        (is (= {:item {:id "3" :things []}}
+               (do
+                 (ddb/update-item creds delete-expr)
+                 (ddb/update-item creds
+                                  (-> (dx/update-expr)
+                                      (dx/delete :bar "foo")
+                                      (dx/expr)
+                                      (assoc :table-name table-name)
+                                      (assoc :key {:id "3"})))
+                 (ddb/get-item creds
+                               :table-name table-name
+                               :key {:id "3"})))))))

@@ -45,9 +45,9 @@
                         (select-keys [:expr-name :field])
                         (assoc :op :set)))))))
 
-(defn delete [expr field value]
-  (let [{:keys [expr-name expr-val] :as op} (new-op field value)]
-    (include-op expr :delete op (str expr-name " " expr-val))))
+#_(defn delete [expr field value]
+    (let [{:keys [expr-name expr-val] :as op} (new-op field value)]
+      (include-op expr :delete op (str expr-name " " expr-val))))
 
 (defn remove [expr field]
   (let [{:keys [expr-name expr-val] :as op} (new-op field nil)]
@@ -79,7 +79,6 @@
 (defn expr [{:keys [ops] :as expr}]
   (let [names (attr-map :expr-name :field ops)
         values (attr-map :expr-val :arg ops)]
-    (prn names (not (empty? names)) values (not (empty? values)))
     (-> {:update-expression (build-expression ops)}
         (assoc-when (not (empty? names)) :expression-attribute-names names)
         (assoc-when (not (empty? values)) :expression-attribute-values values))))
