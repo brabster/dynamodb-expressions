@@ -15,7 +15,7 @@
                   ["clean"]
                   ["check"]
                   ["eastwood"]
-                  ["bikeshed" "-m" "100"]
+                  ["bikeshed" "-m" "120"]
                   ["ancient"]
                   ["cloverage"]]}
   :eastwood {:include-linters [:keyword-typos
