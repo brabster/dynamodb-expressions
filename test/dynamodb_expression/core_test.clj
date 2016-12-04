@@ -79,10 +79,10 @@ SET
 
 (deftest remove-test
   (testing "Yet another basic integration test"
-    (let [{:keys [update-expression expression-attribute-names expression-attribute-values]
+    (let [{:keys [update-expression expression-attribute-names]
            :as ex} (-> (dx/update-expr)
                        (dx/remove :something)
                        dx/expr)]
       (is (= expression-attribute-names {"#nsomething_G__1" "something"}))
-      (is (= expression-attribute-values {":vsomething_G__1" nil}))
+      (is (-> ex (contains? :expression-attribute-values) not))
       (is (= update-expression "REMOVE #nsomething_G__1")))))

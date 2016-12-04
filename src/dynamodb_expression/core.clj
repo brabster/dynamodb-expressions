@@ -58,7 +58,7 @@
        (group-by :op)
        (into (sorted-map))
        (reduce (fn [ex [op ops]]
-                 (prn '>> ops)
+                 #_(prn '>> ops)
                  (->> ops
                       (map :expr-part)
                       (st/join ", ")
@@ -68,10 +68,18 @@
 (defn- attr-map [name-or-value k ops]
   (->> ops
        (map (juxt name-or-value k))
-       ;; (remove #(some nil? %))
+       (filter second)
        (into {})))
 
+(defn- assoc-when [m condition k v]
+  (if condition
+    (assoc m k v)
+    m))
+
 (defn expr [{:keys [ops] :as expr}]
-  {:update-expression (build-expression ops)
-   :expression-attribute-names (attr-map :expr-name :field ops)
-   :expression-attribute-values (attr-map :expr-val :arg ops)})
+  (let [names (attr-map :expr-name :field ops)
+        values (attr-map :expr-val :arg ops)]
+    (prn names (not (empty? names)) values (not (empty? values)))
+    (-> {:update-expression (build-expression ops)}
+        (assoc-when (not (empty? names)) :expression-attribute-names names)
+        (assoc-when (not (empty? values)) :expression-attribute-values values))))
