@@ -1,0 +1,23 @@
+sudo: required
+
+services:
+  - docker
+
+group: deprecated
+
+language: clojure
+
+lein: 2.6.1
+
+cache:
+  directories:
+    - $HOME/.m2
+
+script:
+ - lein qa
+
+deploy:
+  - provider: script
+    script: scripts/deploy.sh
+    on:
+      all_branches: true

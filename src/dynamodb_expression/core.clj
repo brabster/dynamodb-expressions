@@ -99,7 +99,7 @@
                       (str ex (when ex " ") (st/upper-case (name op)) " ")))
                nil)))
 
-(defn- attr-map [name-or-value key ops]
+(defn- attr-map [name-or-value k ops]
   (->> ops
        (map (juxt name-or-value key))
        (core-remove #(some nil? %))
