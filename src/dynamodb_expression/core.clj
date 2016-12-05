@@ -106,7 +106,9 @@
        (into {})))
 
 (defn expr [{:keys [key ops] :as expr}]
-  {:update-expression (build-expression ops)
-   :expression-attribute-names (attr-map :expr-name :field ops)
-   :expression-attribute-values (attr-map :expr-val :val ops)
-   :key key})
+  (let [expression-attribute-names (attr-map :expr-name :field ops)
+        expression-attribute-values (attr-map :expr-val :val ops)]
+    (cond-> {:update-expression (build-expression ops)
+             :key key}
+      expression-attribute-names  (assoc :expression-attribute-names  expression-attribute-names)
+      expression-attribute-values (assoc :expression-attribute-values expression-attribute-values))))
