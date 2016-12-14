@@ -1,6 +1,7 @@
 (ns dynamodb-expression.core-test
   (:require [clojure.test :refer [deftest use-fixtures is are testing]]
-            [dynamodb-expression.core :as dx]))
+            [dynamodb-expression.core :as dx]
+            [dynamodb-expression.grammar-test :as g]))
 
 (defn strip-newlines [s] (clojure.string/replace s #"\n" ""))
 

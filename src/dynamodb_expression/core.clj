@@ -99,11 +99,13 @@
                       (str ex (when ex " ") (st/upper-case (name op)) " ")))
                nil)))
 
-(defn- attr-map [name-or-value k ops]
+(defn attr-map [name-or-value k ops]
+  ;; (clojure.test/is (= [] ops))
   (->> ops
-       (map (juxt name-or-value key))
+       (map (juxt name-or-value k))
        (core-remove #(some nil? %))
-       (into {})))
+       (into {})
+       not-empty))
 
 (defn expr [{:keys [key ops] :as expr}]
   (let [expression-attribute-names (attr-map :expr-name :field ops)
