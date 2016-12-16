@@ -14,10 +14,10 @@
 
 (defn invalid-expr? [expected-expr generated-expr]
   (cond
-    (not (vector? (g/parse expected-expr))) (str "Expected expression not valid : " expected-expr)
-    (not (vector? (g/parse generated-expr))) (str "Generated expression not valid : " generated-expr)
-    (not= expected-expr generated-expr) ["Unexpected expression" generated-expr "expected" expected-expr]
-    :else false))
+    (not (g/parsed? (g/parse expected-expr)))  ["Expected expression not valid : " expected-expr (g/parse expected-expr)]
+    (not (g/parsed? (g/parse generated-expr))) ["Generated expression not valid : " generated-expr (g/parse generated-expr)]
+    (not= expected-expr generated-expr)        ["Unexpected expression" generated-expr "expected" expected-expr]
+    :else                                      false))
 
 (deftest a-test
   (testing "A basic integration test"
@@ -105,7 +105,7 @@
                        dx/expr)
           parsed-exp (g/parse update-expression)]
       (is (= {"#nsomething_G__1" "something"} expression-attribute-names))
-      (is (= {} expression-attribute-values))
+      (is (= nil expression-attribute-values))
       (is (not
            (invalid-expr? "REMOVE #nsomething_G__1" update-expression))))))
 
