@@ -38,7 +38,7 @@
            (do
              (ddb/update-item creds
                               (->
-                               (dx/update-expr)
+                               (dx/update-expr {})
                                (dx/add :foo 1)
                                (dx/set :bar 0)
                                (dx/expr)
@@ -53,13 +53,13 @@
            (do
              (ddb/update-item creds
                               (->
-                               (dx/update-expr)
+                               (dx/update-expr {})
                                (dx/set :bar 0)
                                (dx/expr)
                                (assoc :table-name table-name)
                                (assoc :key {:id "2"})))
              (ddb/update-item creds
-                              (-> (dx/update-expr)
+                              (-> (dx/update-expr {})
                                   (dx/remove :bar)
                                   (dx/expr)
                                   (assoc :table-name table-name)
@@ -70,7 +70,7 @@
 
   #_(testing "delete works"
       (let [delete-expr (->
-                         (dx/update-expr)
+                         (dx/update-expr {})
                          (dx/set :bar #{"foo"})
                          (dx/expr)
                          (assoc :table-name table-name)
@@ -80,7 +80,7 @@
                (do
                  (ddb/update-item creds delete-expr)
                  (ddb/update-item creds
-                                  (-> (dx/update-expr)
+                                  (-> (dx/update-expr {})
                                       (dx/delete :bar "foo")
                                       (dx/expr)
                                       (assoc :table-name table-name)
