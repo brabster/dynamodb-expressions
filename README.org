@@ -17,6 +17,9 @@ and hard-to-read code.
 The nested-map structure also makes these values hard to manipulate in
 a threading-friendly way.
 
+The nested-map structure also makes these values hard to manipulate in
+a threading-friendly way.
+
 Contrived, worst-case example: we want to update a customer document,
 primary key "customer-id", adding 1 to the ~auth-attempts~ key, and
 setting the nested ~call.at~ key to "today".
