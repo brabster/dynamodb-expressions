@@ -3,57 +3,73 @@
 [[https://travis-ci.org/brabster/dynamodb-expressions][https://img.shields.io/travis/brabster/dynamodb-expressions.svg]]
 [[https://github.com/brabster/dynamodb-expressions/releases/latest][https://img.shields.io/github/release/brabster/dynamodb-expressions.svg]]
 
+[[http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Modifying.html][DynamoDB Update Expressions]] in Clojure.
+
 Get the latest version on [[https://clojars.org/dynamodb-expressions][Clojars]]
 
-A WIP attempt to write a DSL for DynamoDB expressions in Clojure. Not ready for real-world use yet!
+* Why?
 
-http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Modifying.html
+DynamoDB's native update expression syntax requires be specified for
+all values and, under some circumstances, for names too. That
+typically means (in my experience, anyway) verbose, brittle and
+hard-to-read code.
+
+Contrived, worst-case example: we want to update a customer object,
+adding 1 to the ~auth-attempts~ key, and setting the nested ~call.at~
+key to "today".
+
+Because ~auth-attempts~ includes a hyphen, and both ~call~ and ~at~
+are DynamoDB reserved words, we must set name placeholders for
+them. We might write something like this:
+
+#+BEGIN_SRC clojure
+{:key :customer-id
+ :update-expression "ADD #auth_attempts :auth_attempts_val SET #call.#at = :call_at_value"
+ :expression-attribute-names {"#auth_attempts" "auth-attempts", "#call" "call" "#at" "at"}
+ :expression-attribute-values {":auth_attempts_val" 1, ":call_at_value" "today"}}
+#+END_SRC
+
+I don't think that expresses what I'm trying to do very clearly. This
+library allows you to write instead:
+
+#+BEGIN_SRC clojure
+(require '[dynamodb-expression.core :as dx])
+
+(->
+  (dx/update-expr :customer-id)
+  (dx/add :auth-attempts 1)
+  (dx/set [:call :at] "today")
+  dx/expr)
+#+END_SRC
+
+Which produces something like:
+
+#+BEGIN_SRC clojure
+{:update-expression
+ "ADD #nauth_attempts_21478 :vauth_attempts_21478 SET #ncall_21479.#ncall_at_21480 = :vcall_at_21480",
+ :key :customer-id,
+ :expression-attribute-names
+ {"#nauth_attempts_21478" "auth-attempts", "#ncall_at_21480" "at", "#ncall_21479" "call"},
+ :expression-attribute-values {":vauth_attempts_21478" 1, ":vcall_at_21480" "today"}}
+#+END_SRC
 
 * Unsupported Functionality
 
-** delete
-** nested paths
+The following update expression features are not supported
+(yet!). Raise an issue and/or submit a PR if you need these.
+
+** array syntax
+
+There's no way to access array elements right now.
+
+** functions
+
+Nor can you use functions like ~list_append~.
 
 * dynamodb Grammar
 
 To test condition expressions without nasty string hacking, there's a
 grammar for condition expressions, based on the documentation.
-
-* Examples
-
-This much pretty much works...
-
-#+BEGIN_SRC clojure
-  (ns foo
-    (:require [dynamodb-expressions :as dx]))
-
-  (def x 4)
-  (dx/expr
-   '(dx/add ["foo.bar" x]
-            ["bar.baz" 8])
-   '(dx/add ["-goof-" 76]))
-
-
-  #_({:update-expression "ADD #foo_bar_G__22528 :x_G__22529, #bar_baz_G__22530 :8_G__22531",
-      :expression-attribute-names {"#foo_bar_G__22528" "foo.bar",
-                                   "#bar_baz_G__22530" "bar.baz",
-                                   "#__goof__G__22532" "-goof-"},
-      :expression-attribute-values {":x_G__22529" 4,
-                                    ":8_G__22531" 8,
-                                    ":76_G__22533" 76}})
-#+END_SRC
-
-Next steps to extend the syntax out to set, remove, delete, and tidy up the syntax, something like:
-
-#+BEGIN_SRC clojure
-(dx/expr
-  (dx/add ["a" x]
-          ["b" 8])
-  (dx/set (dx/+ "c" 76)
-          (dx/= "d" "foo bar"))
-  (dx/remove "e" "f" "g")
-  (dx/delete ["h" "baz"]))
-#+END_SRC
 
 * License
 

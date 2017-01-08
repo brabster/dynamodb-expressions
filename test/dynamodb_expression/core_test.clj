@@ -12,17 +12,17 @@
                              (str prefix "G__" (swap! cnt inc)))]
         (f)))))
 
-(defn invalid-expr? [expected-expr generated-expr] 
+(defn invalid-expr? [expected-expr generated-expr]
   (cond
     (not (g/parsed? (g/parse expected-expr)))
     ["Expected expression not valid : " expected-expr (g/parse expected-expr)]
-    
+
     (not (g/parsed? (g/parse generated-expr)))
     ["Generated expression not valid : " generated-expr (g/parse generated-expr)]
-    
+
     (not= expected-expr generated-expr)
     ["Unexpected expression" generated-expr "expected" expected-expr]
-    
+
     :else
     false))
 
@@ -47,29 +47,31 @@
               ":v_goof__G__3" 76}
              expression-attribute-values))
       (is (not
-           (invalid-expr? "ADD #nfoo_bar_G__1 :vfoo_bar_G__1, #nbar_baz_G__2 :vbar_baz_G__2, #n_goof__G__3 :v_goof__G__3"
-                          update-expression))))))
+           (invalid-expr?
+            "ADD #nfoo_bar_G__1 :vfoo_bar_G__1, #nbar_baz_G__2 :vbar_baz_G__2, #n_goof__G__3 :v_goof__G__3"
+            update-expression))))))
 
 (deftest set-and-add-test
   (testing "Another basic integration test"
     (let [x 4
           {:keys [update-expression expression-attribute-names expression-attribute-values]
            :as ex} (-> (dx/update-expr {:id "12"})
-                       (dx/set :something x)
-                       (dx/add :something-else (* x 8))
+                       (dx/set :x x)
+                       (dx/add :8x (* x 8))
                        (dx/add :fish 12)
                        dx/expr)
           parsed-exp (g/parse update-expression)]
-      (is (= {"#nsomething_G__1" "something"
-              "#nsomething_else_G__2" "something-else"
+      (is (= {"#nx_G__1" "x"
+              "#n8x_G__2" "8x"
               "#nfish_G__3" "fish"}
              expression-attribute-names))
-      (is (= {":vsomething_G__1" 4
-              ":vsomething_else_G__2" 32
+      (is (= {":vx_G__1" 4
+              ":v8x_G__2" 32
               ":vfish_G__3" 12}
              expression-attribute-values))
       (is (not
-           (invalid-expr? update-expression "SET #nsomething_G__1 = :vsomething_G__1 ADD #nsomething_else_G__2 :vsomething_else_G__2, #nfish_G__3 :vfish_G__3"))))))
+           (invalid-expr? update-expression
+                          "SET #nx_G__1 = :vx_G__1 ADD #n8x_G__2 :v8x_G__2, #nfish_G__3 :vfish_G__3"))))))
 
 (deftest set-test
   (testing "Another basic integration test"
