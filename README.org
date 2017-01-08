@@ -17,16 +17,16 @@ and hard-to-read code.
 The nested-map structure also makes these values hard to manipulate in
 a threading-friendly way.
 
-Contrived, worst-case example: we want to update a customer object,
-adding 1 to the ~auth-attempts~ key, and setting the nested ~call.at~
-key to "today".
+Contrived, worst-case example: we want to update a customer document,
+primary key "customer-id", adding 1 to the ~auth-attempts~ key, and
+setting the nested ~call.at~ key to "today".
 
 Because ~auth-attempts~ includes a hyphen, and both ~call~ and ~at~
 are DynamoDB reserved words, we must set name placeholders for
 them. We might write something like this:
 
 #+BEGIN_SRC clojure
-{:key :customer-id
+{:key {:customer-id "foo"}
  :update-expression "ADD #auth_attempts :auth_attempts_val SET #call.#at = :call_at_value"
  :expression-attribute-names {"#auth_attempts" "auth-attempts"
                               "#call" "call"
@@ -42,7 +42,7 @@ library allows you to write instead:
 (require '[dynamodb-expression.core :as dx])
 
 (->
-  (dx/update-expr :customer-id)
+  (dx/update-expr {:customer-id "foo"})
   (dx/add :auth-attempts 1)
   (dx/set [:call :at] "today")
   dx/expr)
@@ -55,7 +55,7 @@ retained to help debugging:
 #+BEGIN_SRC clojure
 {:update-expression
  "ADD #nauth_attempts_21478 :vauth_attempts_21478 SET #ncall_21479.#ncall_at_21480 = :vcall_at_21480"
- :key :customer-id
+ :key {:customer-id "foo"}
  :expression-attribute-names {"#nauth_attempts_21478" "auth-attempts"
                               "#ncall_at_21480" "at"
                               "#ncall_21479" "call"},
