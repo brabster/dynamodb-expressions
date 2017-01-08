@@ -9,10 +9,10 @@ Get the latest version on [[https://clojars.org/dynamodb-expressions][Clojars]]
 
 * Why?
 
-DynamoDB's native update expression syntax requires be specified for
-all values and, under some circumstances, for names too. That
-typically means (in my experience, anyway) verbose, brittle and
-hard-to-read code.
+DynamoDB's native update expression syntax requires placeholders be
+specified for all values and, under some circumstances, for names
+too. That typically means (in my experience, anyway) verbose, brittle
+and hard-to-read code.
 
 Contrived, worst-case example: we want to update a customer object,
 adding 1 to the ~auth-attempts~ key, and setting the nested ~call.at~
@@ -25,8 +25,11 @@ them. We might write something like this:
 #+BEGIN_SRC clojure
 {:key :customer-id
  :update-expression "ADD #auth_attempts :auth_attempts_val SET #call.#at = :call_at_value"
- :expression-attribute-names {"#auth_attempts" "auth-attempts", "#call" "call" "#at" "at"}
- :expression-attribute-values {":auth_attempts_val" 1, ":call_at_value" "today"}}
+ :expression-attribute-names {"#auth_attempts" "auth-attempts"
+                              "#call" "call"
+                              "#at" "at"}
+ :expression-attribute-values {":auth_attempts_val" 1
+                               ":call_at_value" "today"}}
 #+END_SRC
 
 I don't think that expresses what I'm trying to do very clearly. This
@@ -42,15 +45,19 @@ library allows you to write instead:
   dx/expr)
 #+END_SRC
 
-Which produces something like:
+Which produces something like the following, applying placeholders for
+all names. Some indication of where the placeholder came from is
+retained to help debugging:
 
 #+BEGIN_SRC clojure
 {:update-expression
- "ADD #nauth_attempts_21478 :vauth_attempts_21478 SET #ncall_21479.#ncall_at_21480 = :vcall_at_21480",
- :key :customer-id,
- :expression-attribute-names
- {"#nauth_attempts_21478" "auth-attempts", "#ncall_at_21480" "at", "#ncall_21479" "call"},
- :expression-attribute-values {":vauth_attempts_21478" 1, ":vcall_at_21480" "today"}}
+ "ADD #nauth_attempts_21478 :vauth_attempts_21478 SET #ncall_21479.#ncall_at_21480 = :vcall_at_21480"
+ :key :customer-id
+ :expression-attribute-names {"#nauth_attempts_21478" "auth-attempts"
+                              "#ncall_at_21480" "at"
+                              "#ncall_21479" "call"},
+ :expression-attribute-values {":vauth_attempts_21478" 1
+                               ":vcall_at_21480" "today"}}
 #+END_SRC
 
 * Unsupported Functionality
