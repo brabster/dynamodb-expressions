@@ -3,7 +3,7 @@
 [[https://travis-ci.org/brabster/dynamodb-expressions][https://img.shields.io/travis/brabster/dynamodb-expressions.svg]]
 [[https://github.com/brabster/dynamodb-expressions/releases/latest][https://img.shields.io/github/release/brabster/dynamodb-expressions.svg]]
 
-[[http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Modifying.html][DynamoDB Update Expressions]] in Clojure.
+[[http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Modifying.html][DynamoDB Update Expressions]] in Clojure, designed for use with [[https://github.com/mcohen01/amazonica][Amazonica]].
 
 Get the latest version on [[https://clojars.org/dynamodb-expressions][Clojars]]
 
