@@ -94,6 +94,22 @@
                                "#nsomething_G__3 = #nsomething_else_G__2 + :vsomething_G__3")
                           update-expression))))))
 
+(deftest grouping-test
+  (testing "operations are grouped together"
+    (let [x 4
+          {:keys [update-expression expression-attribute-names expression-attribute-values]
+           :as ex} (-> (dx/update-expr {:id "12"})
+                       (dx/set :fish + 33)
+                       (dx/remove :remove-me)
+                       (dx/set :something :something-else "+" 4)
+                       dx/expr)
+          parsed-exp (g/parse update-expression)]
+      (is (not
+           (invalid-expr? (str "SET #nfish_G__1 = #nfish_G__1 + :vfish_G__1, "
+                               "#nsomething_G__4 = #nsomething_else_G__3 + :vsomething_G__4 "
+                               "REMOVE #nremove_me_G__2")
+                          update-expression))))))
+
 (deftest delete-test
   (testing "Yet another basic integration test"
     (let [{:keys [update-expression expression-attribute-names expression-attribute-values]
