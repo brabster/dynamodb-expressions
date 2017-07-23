@@ -37,11 +37,21 @@
     value-placeholder = ':' legal-name
     whitespace = ' '
     comma = ','
-    dot = '.'"
-   :output-format :enlive))
+    dot = '.'"))
 
-(def parsed? (complement insta/failure?))
+(defn ops-grouped? [ast]
+  (->>
+   (insta/transform {:update-expression first} ast)
+   (keep #{:SET :REMOVE :ADD :DELETE})
+   frequencies
+   vals
+   (filter #(> % 1))
+   empty?))
 
+(defn parsed? [ast]
+  (and
+   (not (insta/failure? ast))
+   (ops-grouped? ast)))
 
 (deftest dynamodb-expression-grammar-test
   (testing "AWS documentation examples parse"
@@ -61,8 +71,10 @@ SET
 
   (testing "Badly-formed examples don't parse"
     (testing "random word"
-      (is (insta/failure? (parse "foo"))))
+      (is (not (parsed? (parse "foo")))))
     (testing "extra comma between types of operation"
-      (is (insta/failure? (parse "SET list[0] = :val1, REMOVE #m.nestedField1, #m.nestedField2"))))
+      (is (not (parsed? (parse "SET list[0] = :val1, REMOVE #m.nestedField1, #m.nestedField2")))))
     (testing "missing comma between two of same type of operation"
-      (is (insta/failure? (parse "SET list[0] = :val1 REMOVE #m.nestedField1 #m.nestedField2"))))))
+      (is (not (parsed? (parse "SET list[0] = :val1 REMOVE #m.nestedField1 #m.nestedField2")))))
+    (testing "ungrouped operations don't parse"
+      (is (not (parsed? (parse "SET foo = :foo REMOVE bar SET baz = :baz")))))))

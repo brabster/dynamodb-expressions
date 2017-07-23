@@ -112,7 +112,8 @@
 
 (defn- build-expression [ops]
   (->> ops
-       (partition-by :op)
+       (group-by :op)
+       (map second)
        (reduce (fn [ex [{:keys [op]} :as ops]]
                  (->> ops
                       (keep :expr-part)
